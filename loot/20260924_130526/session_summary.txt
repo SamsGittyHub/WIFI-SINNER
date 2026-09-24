@@ -1,0 +1,8 @@
+WIFISINNER session 2026-09-24 13:06:17
+ssid=FREE WIFI iface=wlp8s0 ch=6 uplink=enp7s0
+
+CREDENTIALS CAPTURED: 0
+
+CREDIT CARDS CAPTURED: 0
+
+clients: 1  dns queries: 0  tls hosts: 0  http secrets: 0

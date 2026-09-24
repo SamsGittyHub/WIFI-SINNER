@@ -1,0 +1,7 @@
+wifisint session 2026-09-24 13:05:15
+ssid=FREE WIFI iface=wlp8s0 ch=6 uplink=enp7s0
+
+CREDENTIALS CAPTURED: 1
+  [2026-09-24 12:42:26] google | samirtaysirdi@gmail.com / Breakingbad123! | 10.0.0.185 (Android)
+
+clients: 2  dns queries: 26  tls hosts: 3  http secrets: 1

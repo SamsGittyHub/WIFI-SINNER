@@ -67,14 +67,22 @@ class TerminalUI:
         """Clear current line"""
         print(f"\r{C_DIM}{' ' * self.columns}{C_RESET}", end="\r")
     
-    def header(self, title, subtitle=None):
-        """Display main header"""
+    def header(self, title=None, subtitle=None):
+        """Display main header with big red WIFISINNER banner"""
         self.clear_line()
-        print(f"\n{C_BMAGENTA}{'═' * min(70, self.columns)}{C_RESET}")
-        print(f"{C_BMAGENTA}WIFISINNER ULTIMATE{C_RESET} — Pegasus-Grade Mobile Financial Weapon")
-        if subtitle:
-            print(f"{C_DIM}{subtitle}{C_RESET}")
-        print(f"{C_BMAGENTA}{'═' * min(70, self.columns)}{C_RESET}\n")
+        
+        # Big red WIFISINNER banner
+        print(f"\n{C_BRED}")
+        print("  ██╗    ██╗ █████╗ ███╗   ██╗███████╗    ██████╗ ██╗   ██╗███╗   ██╗ █████╗ ")
+        print("  ██║    ██║██╔══██╗████╗  ██║██╔════╝    ██╔══██╗██║   ██║████╗  ██║██╔══██╗")
+        print("  ██║ █╗ ██║███████║██╔██╗ ██║█████╗      ██████╔╝██║   ██║██╔██╗ ██║███████║")
+        print("  ██║███╗██║██╔══██║██║╚██╗██║██╔══╝      ██╔═══╝ ██║   ██║██║╚██╗██║██╔══██║")
+        print("  ╚███╔███╔╝██║  ██║██║ ╚████║███████╗    ██║     ╚██████╔╝██║ ╚████║██║  ██║")
+        print("   ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝    ╚═╝      ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝")
+        print(f"{C_RESET}")
+        
+        # Subtitle
+        print(f"{C_BMAGENTA}─── Pegasus-Grade Mobile Financial Weapon ───{C_RESET}\n")
         sys.stdout.flush()
     
     def phase_start(self, phase_num, phase_name):

@@ -7,14 +7,14 @@
 xcode-select --install
 ```
 
-2. **Install Python 3** (usually pre-installed on macOS):
+2. **Verify Python 3** (usually pre-installed on macOS):
 ```bash
 python3 --version
 ```
 
-3. **Install scapy** (for packet capture):
+3. **Ensure required tools are available**:
 ```bash
-sudo python3 -m pip install scapy
+which networksetup ifconfig tcpdump
 ```
 
 ## Quick Test
@@ -24,24 +24,25 @@ sudo python3 -m pip install scapy
 python3 wifisinner_ultimate.py --scan --iface en0
 ```
 
-This will list all nearby WiFi networks using macOS's native WiFi stack.
+Lists nearby WiFi networks. If the `airport` utility is available, it performs a full scan. Otherwise, it lists preferred networks as a fallback.
 
 ### 2. Run Environment Detection
 ```bash
 python3 macos_adapter.py --detect --iface en0
 ```
 
-Checks for debuggers, analysis tools, and VM indicators.
+Checks for debuggers (LLDB/GDB), analysis tools (Frida, Objection, Jadx), and VM indicators.
 
 ### 3. Start Basic Operation
 ```bash
 sudo python3 wifisinner_ultimate.py --iface en0
 ```
 
-On macOS, this will:
-- Scan for probe requests
-- Start an OTA delivery server
-- Capture basic device information
+On macOS, this runs in compatibility mode:
+- Scans for nearby networks (or lists preferred networks if `airport` utility is unavailable)
+- Starts an OTA delivery server on port 8080
+- Starts probe request sniffer
+- Runs Phase 2-4 modules (designed for Android targets, limited functionality on macOS)
 
 ## Interface Selection
 
@@ -58,18 +59,17 @@ networksetup -listallhardwareports
 
 ### What Works ✅
 - Network scanning
-- Probe request sniffing  
+- Probe request sniffing
 - OTA payload delivery
 - Environment detection
-- C2 tunneling
-- Self-destruct
+- Persistence (LaunchAgent)
 
 ### What's Limited ⚠️
-- **Beacon Spoofing**: Uses Internet Sharing API (less control)
-- **Monitor Mode**: Not available (no raw 802.11 frames)
-- **Deauth Hammering**: Limited (uses ARP spoofing instead)
-- **Privilege Escalation**: Requires specific macOS versions
-- **Android Integration**: Needs Android emulator or ADB
+- **Beacon Spoofing**: Not available (no raw 802.11 frame injection)
+- **Monitor Mode**: Not available on macOS
+- **Deauth Hammering**: Not available (requires raw 802.11 frames)
+- **Privilege Escalation**: Phase 2 modules target Android, not macOS
+- **Android Integration**: Requires Android emulator or ADB
 
 ## Troubleshooting
 
@@ -87,15 +87,26 @@ networksetup -listallhardwareports
 sudo python3 wifisinner_ultimate.py --iface en1
 ```
 
-### "Scapy not found"
+### OTA server port conflict
 ```bash
-sudo python3 -m pip install scapy
+# If port 8080 is in use, the server will try 0.0.0.0 and 127.0.0.1
+# Check for conflicts:
+lsof -i :8080
 ```
 
 ### Airport utility missing
+The `airport` utility is optional. If not available, the scanner falls back to listing preferred networks.
+
+To install the airport utility:
 ```bash
-# Create symlink to airport
+# Create symlink to airport (if available on your system)
 sudo ln -s "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport" /usr/local/bin/airport
+```
+
+### tcpdump not found
+```bash
+# Install via Homebrew
+brew install tcpdump
 ```
 
 ## Comparison: macOS vs Linux
@@ -104,9 +115,9 @@ sudo ln -s "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Curr
 |---------|-------|-------|
 | WiFi Control | Full (nmcli, iw) | Limited (networksetup) |
 | Monitor Mode | ✅ Yes | ❌ No |
-| Beacon Spoofing | Full control | Internet Sharing API |
-| Deauth | Raw 802.11 frames | ARP spoofing |
-| Privilege Escalation | Dirty COW, etc. | Kernel patches |
+| Beacon Spoofing | Full control | ❌ Not available |
+| Deauth | Raw 802.11 frames | ❌ Not available |
+| Privilege Escalation | Dirty COW, etc. | Android-only phases |
 | Android Integration | Direct ADB | Emulator required |
 
 ## Advanced: Using with Android Emulator

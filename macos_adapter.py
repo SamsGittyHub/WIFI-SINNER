@@ -42,33 +42,40 @@ class MacOSWiFi:
         networks = []
         
         try:
-            # Use airport utility
+            # Use airport utility (primary method)
             airport_path = self._find_airport()
             
             if airport_path:
                 result = subprocess.run(
-                    [airport_path, "-s", "-x"],
+                    [airport_path, "-s"],
                     capture_output=True,
                     text=True,
                     timeout=10
                 )
                 
-                # Parse XML output
+                # Parse output
                 for line in result.stdout.split("\n"):
-                    if "<key>SSID</key>" in line:
-                        # Extract SSID
-                        pass  # Simplified - full implementation would parse XML
+                    if line.strip() and not line.startswith("BSSID") and not line.startswith("SSID"):
+                        parts = line.split()
+                        if len(parts) >= 2:
+                            networks.append({
+                                "ssid": parts[1],
+                                "bssid": parts[0],
+                                "channel": parts[2] if len(parts) > 2 else None,
+                                "rssi": parts[4] if len(parts) > 4 else None
+                            })
             else:
-                # Fallback to networksetup
+                # Fallback: list preferred networks (not a full scan)
+                print(f"[macOS WiFi] Airport utility not found. Listing preferred networks only.")
                 result = subprocess.run(
-                    ["networksetup", "-listallwirelessnetworks"],
+                    ["networksetup", "-listpreferredwirelessnetworks", self.iface],
                     capture_output=True,
                     text=True,
                     timeout=10
                 )
                 
                 for line in result.stdout.split("\n"):
-                    if line.strip():
+                    if line.strip() and "Preferred networks" not in line:
                         networks.append({"ssid": line.strip()})
                         
         except Exception as e:
